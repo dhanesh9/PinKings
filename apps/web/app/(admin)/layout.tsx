@@ -20,10 +20,10 @@ export default function AdminLayout({
       >
         <h2>Moderation</h2>
         <ul style={{ listStyle: 'none', padding: 0, marginTop: 24 }}>
-          <li style={{ marginBottom: 12 }}><a href="/admin/dashboard">Dashboard</a></li>
-          <li style={{ marginBottom: 12 }}><a href="/admin/dashboard?tab=leaders">Leaders</a></li>
-          <li style={{ marginBottom: 12 }}><a href="/admin/dashboard?tab=events">Events</a></li>
-          <li><a href="/admin/dashboard?tab=reports">Reports</a></li>
+          <li style={{ marginBottom: 12 }}><a href="/dashboard">Dashboard</a></li>
+          <li style={{ marginBottom: 12 }}><a href="/dashboard?tab=leaders">Leaders</a></li>
+          <li style={{ marginBottom: 12 }}><a href="/dashboard?tab=events">Events</a></li>
+          <li><a href="/dashboard?tab=reports">Reports</a></li>
         </ul>
       </aside>
       <div style={{ padding: '32px' }}>{children}</div>

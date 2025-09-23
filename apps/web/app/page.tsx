@@ -1,244 +1,327 @@
+'use client';
+
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import {
+  categories,
+  events,
+  leaders,
+  locations,
+  type Category,
+  type Event,
+  type Leader,
+  type LocationOption,
+  type PriceRange,
+} from '@/lib/mock';
+
+const currencySymbols: Record<PriceRange['currency'], string> = { USD: '$' };
+
+function formatPrice(price: PriceRange) {
+  const symbol = currencySymbols[price.currency] ?? '';
+  return `${symbol}${price.min.toFixed(0)} – ${symbol}${price.max.toFixed(0)}`;
+}
+
+function spotsLabel(event: Event) {
+  const remaining = Math.max(event.seats.total - event.seats.booked, 0);
+  if (remaining === 0) {
+    return 'Sold out';
+  }
+  if (remaining <= 5) {
+    return `${remaining} spots left`;
+  }
+  return `${remaining} spots open`;
+}
+
+const defaultLocationId = locations[0]?.id ?? 'all';
+
+function buildHostLookup(allLeaders: Leader[]) {
+  return allLeaders.reduce<Record<string, Leader>>((acc, leader) => {
+    acc[leader.id] = leader;
+    return acc;
+  }, {});
+}
+
+const leaderLookup = buildHostLookup(leaders);
+
+function getLocationLabel(id: string | 'all') {
+  if (id === 'all') return 'you';
+  const match = locations.find((location) => location.id === id);
+  return match ? match.city : 'you';
+}
+
+function categoryLabel(categoryId: string | 'all') {
+  if (categoryId === 'all') return 'all events';
+  const match = categories.find((category) => category.id === categoryId);
+  return match ? match.label : 'all events';
+}
 
 const navLinks = [
-  { label: 'Home', href: '/' },
-  { label: 'Leaders', href: '#leaders' },
-  { label: 'Events', href: '#events' },
-  { label: 'Matchups', href: '#matchups' },
-  { label: 'Admin', href: '/admin/dashboard' },
-];
-
-const featureHighlights = [
-  {
-    label: '01',
-    title: 'Weekly Pinboard Battles',
-    description:
-      'Nominate local champions, vote with pins, and unlock badges that carry real-world influence in your neighborhood.',
-  },
-  {
-    label: '02',
-    title: 'Event Momentum Tracking',
-    description:
-      'Measure how on-the-ground appearances translate into momentum and share insights with your community instantly.',
-  },
-  {
-    label: '03',
-    title: 'Creator Tools for Teams',
-    description:
-      'Build matchups, schedule events, and publish highlight reels with collaborative workflows built for grassroots teams.',
-  },
-];
-
-const leaderboardPreview = [
-  { name: 'Avery Chen', pins: 128, trend: '+12 this week' },
-  { name: 'Marcus Silva', pins: 119, trend: '+8 this week' },
-  { name: 'Lila Patel', pins: 102, trend: '+19 this week' },
-];
-
-const upcomingMatchups = [
-  {
-    title: 'Downtown vs. Riverside',
-    description: 'Cleanup rally + pop-up clinics',
-    date: 'Saturday 4PM',
-  },
-  {
-    title: 'Northside vs. Old Quarter',
-    description: 'Street art revival throwdown',
-    date: 'Sunday 1PM',
-  },
-  {
-    title: 'Bayfront vs. Midtown',
-    description: 'Transit riders challenge night',
-    date: 'Wednesday 6PM',
-  },
-];
-
-const eventMoments = [
-  {
-    title: 'South Park Night Market',
-    highlight: '6,200 votes cast from QR kiosks',
-  },
-  {
-    title: 'Community Safety Walk',
-    highlight: '45 live check-ins with broadcast clips',
-  },
+  { label: 'Browse', href: '/explore' as const },
+  { label: 'Communities', href: '/explore#communities' as const },
+  { label: 'Create an event', href: '/explore#create' as const },
 ];
 
 export default function HomePage() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState<string>(defaultLocationId);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  const filteredEvents = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return events.filter((event) => {
+      const matchesLocation =
+        selectedLocation === 'all' || event.locationId === selectedLocation;
+      const matchesCategory =
+        selectedCategory === 'all' || event.categoryId === selectedCategory;
+
+      if (!matchesLocation || !matchesCategory) {
+        return false;
+      }
+
+      if (!normalizedSearch) {
+        return true;
+      }
+
+      const locationName = locations.find((loc) => loc.id === event.locationId)?.city ?? '';
+      const hostNames = event.hostIds
+        .map((id) => leaderLookup[id]?.name ?? '')
+        .join(' ');
+
+      const haystack = `${event.title} ${event.summary} ${locationName} ${hostNames}`.toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+  }, [searchTerm, selectedCategory, selectedLocation]);
+
+  const sortedLeaders = useMemo(() => {
+    const relevantLeaders = leaders.filter((leader) => {
+      const matchesCategory =
+        selectedCategory === 'all' || leader.categories.includes(selectedCategory);
+      const matchesLocation =
+        selectedLocation === 'all' || leader.locations.includes(selectedLocation);
+      return matchesCategory && matchesLocation;
+    });
+
+    return relevantLeaders.sort((a, b) => {
+      const badgeDelta = b.badges.length - a.badges.length;
+      if (badgeDelta !== 0) return badgeDelta;
+      return b.rating - a.rating;
+    });
+  }, [selectedCategory, selectedLocation]);
+
+  const topLeader = sortedLeaders[0];
+  const locationLabel = getLocationLabel(selectedLocation);
+  const activeCategoryLabel = categoryLabel(selectedCategory);
+
   return (
-    <main className="page">
-      <header className="site-header" aria-label="Primary navigation">
-        <Link href="/" className="brand" aria-label="PinKings home">
-          <span className="brand-badge">PK</span>
-          PinKings
+    <main className="home-page">
+      <header className="home-header">
+        <Link href="/" className="home-brand">
+          <span>PinKings Meetups</span>
         </Link>
-        <nav>
-          <ul className="nav-links">
-            {navLinks.map((link) => {
-              const isAnchor = link.href.startsWith('#');
-              const isActive = link.href === '/';
-              const linkClass = isActive ? 'nav-link-active' : undefined;
-
-              return (
-                <li key={link.label}>
-                  {isAnchor ? (
-                    <a href={link.href} className={linkClass}>
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link href={link.href} className={linkClass}>
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-        <div className="header-actions">
-          <Link href="/login" className="btn btn-secondary">
-            Sign In
-          </Link>
-          <a href="#waitlist" className="btn btn-primary">
-            Join the Waitlist
-          </a>
-        </div>
-      </header>
-
-      <section className="hero">
-        <div>
-          <span className="hero-badge">Pin your local legends</span>
-          <h1 className="hero-title">
-            Rise to the board. <span>Win the block.</span>
-          </h1>
-          <p className="hero-description">
-            PinKings turns hyperlocal leadership into a season of friendly rivalry.
-            Track appearances, rally support, and surface the changemakers driving your
-            neighborhood forward.
-          </p>
-          <div className="hero-actions">
-            <a href="#leaders" className="btn btn-primary">
-              Explore Leaders
-            </a>
-            <a href="#events" className="btn btn-secondary">
-              See Event Highlights
-            </a>
-            <Link href="/admin/dashboard" className="btn btn-secondary">
-              Launch Admin Console
-            </Link>
-          </div>
-        </div>
-        <aside className="hero-visual" aria-label="Leaderboard preview">
-          <h3>
-            Live Leaderboard
-            <span style={{ fontSize: 14, opacity: 0.7 }}>•</span>
-            <span style={{ color: 'var(--accent-highlight)', fontSize: 14 }}>Beta</span>
-          </h3>
+        <nav className="home-nav" aria-label="Primary">
           <ul>
-            {leaderboardPreview.map((entry) => (
-              <li key={entry.name}>
-                <div>
-                  <strong>{entry.name}</strong>
-                  <small>{entry.trend}</small>
-                </div>
-                <span>{entry.pins} pts</span>
+            {navLinks.map((link) => (
+              <li key={link.label}>
+                <Link href={link.href}>
+                  {link.label}
+                </Link>
               </li>
             ))}
           </ul>
+        </nav>
+        <Link href="/explore#create" className="btn btn-primary">
+          Host an event
+        </Link>
+      </header>
+
+      <section className="search-section" aria-labelledby="search-heading">
+        <div className="search-intro">
+          <h1 id="search-heading">Find your next meetup</h1>
+          <p>
+            Browse workshops, training sessions, and community gatherings. Filter by location or
+            event type to see what's happening nearby.
+          </p>
+        </div>
+        <form className="search-form" role="search" onSubmit={(event) => event.preventDefault()}>
+          <label className="search-field">
+            <span>Search by event or host</span>
+            <input
+              type="search"
+              placeholder="Try “AI build night” or “boxing”"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </label>
+
+          <div className="search-controls">
+            <label className="search-field">
+              <span>Location</span>
+              <select
+                value={selectedLocation}
+                onChange={(event) => setSelectedLocation(event.target.value)}
+              >
+                <option value="all">All locations</option>
+                {locations.map((locationOption: LocationOption) => (
+                  <option key={locationOption.id} value={locationOption.id}>
+                    {locationOption.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <fieldset className="category-filter">
+              <legend>Event type</legend>
+              <div className="category-options">
+                <button
+                  type="button"
+                  className={selectedCategory === 'all' ? 'chip chip-active' : 'chip'}
+                  onClick={() => setSelectedCategory('all')}
+                >
+                  All
+                </button>
+                {categories.map((category: Category) => (
+                  <button
+                    type="button"
+                    key={category.id}
+                    className={selectedCategory === category.id ? 'chip chip-active' : 'chip'}
+                    onClick={() => setSelectedCategory(category.id)}
+                  >
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+        </form>
+      </section>
+
+      <section className="home-layout">
+        <div className="events-column" aria-live="polite">
+          <header className="section-heading">
+            <div>
+              <h2>Events around {locationLabel}</h2>
+              <p>
+                Showing {filteredEvents.length} {filteredEvents.length === 1 ? 'result' : 'results'} for {activeCategoryLabel}.
+              </p>
+            </div>
+            <Link href="/explore" className="link subtle">
+              Browse all
+            </Link>
+          </header>
+
+          <div className="event-list">
+            {filteredEvents.map((event) => {
+              const hostNames = event.hostIds
+                .map((hostId) => leaderLookup[hostId]?.name)
+                .filter(Boolean)
+                .join(', ');
+              const location = locations.find((loc) => loc.id === event.locationId);
+              return (
+                <article key={event.id} className="event-card">
+                  <header>
+                    <span className="event-date">{event.when}</span>
+                    <h3>{event.title}</h3>
+                    <p>{event.summary}</p>
+                  </header>
+                  <dl>
+                    <div>
+                      <dt>Hosted by</dt>
+                      <dd>{hostNames}</dd>
+                    </div>
+                    <div>
+                      <dt>Format</dt>
+                      <dd>{event.format}</dd>
+                    </div>
+                    <div>
+                      <dt>Skill level</dt>
+                      <dd>{event.skillLevel}</dd>
+                    </div>
+                    <div>
+                      <dt>Location</dt>
+                      <dd>{location?.label}</dd>
+                    </div>
+                  </dl>
+                  <footer>
+                    <span>{formatPrice(event.price)}</span>
+                    <span>{spotsLabel(event)}</span>
+                    <Link href={`/explore/community/${event.communitySlug}`} className="link">
+                      View details
+                    </Link>
+                  </footer>
+                </article>
+              );
+            })}
+
+            {filteredEvents.length === 0 && (
+              <div className="empty-state">
+                <h3>No events found</h3>
+                <p>Try a different search term or adjust your filters.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <aside className="leaderboard-column" aria-labelledby="leaders-heading">
+          <header>
+            <h2 id="leaders-heading">Top leaders nearby</h2>
+            <p>Sorted by badge count for your selected event type.</p>
+          </header>
+
+          {topLeader ? (
+            <article className="leader-highlight">
+              <span className="leader-rank">#1</span>
+              <div>
+                <h3>{topLeader.name}</h3>
+                <p>{topLeader.bio}</p>
+                <div className="leader-meta">
+                  <span>{topLeader.badges.join(' • ')}</span>
+                  <span>
+                    {topLeader.rating.toFixed(2)} rating • {topLeader.sessionsHosted} sessions hosted
+                  </span>
+                </div>
+              </div>
+            </article>
+          ) : (
+            <div className="empty-state">
+              <h3>Pick a category to see leaders</h3>
+              <p>Set your filters to discover instructors who host that style of event.</p>
+            </div>
+          )}
+
+          {sortedLeaders.length > 1 && (
+            <ol className="leader-list">
+              {sortedLeaders.slice(1, 5).map((leader, index) => (
+                <li key={leader.id}>
+                  <span className="leader-rank">#{index + 2}</span>
+                  <div>
+                    <strong>{leader.name}</strong>
+                    <span>{leader.badges.join(' • ')}</span>
+                    <small>
+                      {leader.price.min === leader.price.max
+                        ? `$${leader.price.min} per session`
+                        : `${formatPrice(leader.price)} per session`}
+                    </small>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
         </aside>
       </section>
 
-      <section id="leaders" className="section">
-        <div className="section-header">
-          <span className="section-eyebrow">Why it hits different</span>
-          <h2 className="section-title">Competition that fuels real community impact</h2>
-          <p className="section-description">
-            PinKings blends the energy of esports overlays with neighborhood-first metrics.
-            Think: weekly matchups, live QR voting, progress dashboards, and shareable recaps
-            that keep your supporters in the loop.
+      <section className="cta-section">
+        <div>
+          <h2>Bring your community together</h2>
+          <p>
+            Launch a meetup, workshop, or training session in minutes. Share details, manage RSVPs,
+            and spotlight your instructors.
           </p>
         </div>
-        <div className="feature-grid">
-          {featureHighlights.map((feature) => (
-            <article key={feature.title} className="feature-card">
-              <span>{feature.label}</span>
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
-              <Link href="/admin/dashboard" className="btn btn-secondary" style={{ width: 'fit-content' }}>
-                Build a bracket
-              </Link>
-            </article>
-          ))}
-        </div>
+        <Link href="/explore#create" className="btn btn-primary">
+          Create an event
+        </Link>
       </section>
-
-      <section id="events" className="section">
-        <div className="section-header">
-          <span className="section-eyebrow">Moments that matter</span>
-          <h2 className="section-title">Turn offline energy into shareable stories</h2>
-          <p className="section-description">
-            PinKings comes ready with event cards, live dashboards, and recap templates so your
-            supporters never miss a beat.
-          </p>
-        </div>
-        <div className="leaderboard-list">
-          {eventMoments.map((event) => (
-            <div key={event.title} className="stat-card">
-              <strong>{event.title}</strong>
-              <span>{event.highlight}</span>
-              <a href="#waitlist" className="btn btn-secondary" style={{ whiteSpace: 'nowrap' }}>
-                Save template
-              </a>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="matchups" className="section">
-        <div className="section-header">
-          <span className="section-eyebrow">Matchups on deck</span>
-          <h2 className="section-title">Build hype for your next face-off</h2>
-        </div>
-        <div className="matches-grid">
-          {upcomingMatchups.map((matchup) => (
-            <div key={matchup.title} className="match-card">
-              <h4>{matchup.title}</h4>
-              <p>{matchup.description}</p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: 14, letterSpacing: '0.08em' }}>
-                {matchup.date}
-              </span>
-              <Link href="/admin/dashboard" className="btn btn-secondary" style={{ width: 'fit-content' }}>
-                Manage matchup
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="waitlist" className="cta-panel">
-        <h3>Ready to crown your next neighborhood MVP?</h3>
-        <p>
-          Join the PinKings beta crew for early access, curated onboarding, and launch-night perks
-          for your community.
-        </p>
-        <div className="hero-actions" style={{ justifyContent: 'center' }}>
-          <a href="mailto:founders@pinkings.app" className="btn btn-primary">
-            Request an invite
-          </a>
-          <Link href="/admin/dashboard" className="btn btn-secondary">
-            Preview the console
-          </Link>
-        </div>
-      </section>
-
-      <footer className="site-footer">
-        <span>© {new Date().getFullYear()} PinKings. Built for community hype squads.</span>
-        <div className="footer-links">
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/terms">Terms</Link>
-          <a href="mailto:team@pinkings.app">Contact</a>
-        </div>
-      </footer>
     </main>
   );
 }
