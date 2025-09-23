@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "types": ["expo", "jest"],
+    "baseUrl": ".",
+    "paths": {
+      "@pin-kings/shared": ["../../packages/shared/src"],
+      "@pin-kings/ui": ["../../packages/ui/src"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]
+}
