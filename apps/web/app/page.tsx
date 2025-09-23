@@ -1,11 +1,15 @@
 import Link from 'next/link';
+import type { Route } from 'next';
+type NavLink =
+  | { label: string; href: Route; kind?: 'route' }
+  | { label: string; href: `#${string}`; kind: 'anchor' };
 
-const navLinks = [
-  { label: 'Home', href: '/' },
-  { label: 'Leaders', href: '#leaders' },
-  { label: 'Events', href: '#events' },
-  { label: 'Matchups', href: '#matchups' },
-  { label: 'Admin', href: '/admin/dashboard' },
+const navLinks: NavLink[] = [
+  { label: 'Home', href: '/', kind: 'route' },
+  { label: 'Leaders', href: '#leaders', kind: 'anchor' },
+  { label: 'Events', href: '#events', kind: 'anchor' },
+  { label: 'Matchups', href: '#matchups', kind: 'anchor' },
+  { label: 'Admin', href: '/dashboard', kind: 'route' },
 ];
 
 const featureHighlights = [
@@ -75,8 +79,8 @@ export default function HomePage() {
         <nav>
           <ul className="nav-links">
             {navLinks.map((link) => {
-              const isAnchor = link.href.startsWith('#');
-              const isActive = link.href === '/';
+              const isAnchor = link.kind === 'anchor';
+              const isActive = !isAnchor && link.href === '/';
               const linkClass = isActive ? 'nav-link-active' : undefined;
 
               return (
@@ -96,9 +100,9 @@ export default function HomePage() {
           </ul>
         </nav>
         <div className="header-actions">
-          <Link href="/login" className="btn btn-secondary">
+          <a href="/login" className="btn btn-secondary">
             Sign In
-          </Link>
+          </a>
           <a href="#waitlist" className="btn btn-primary">
             Join the Waitlist
           </a>
@@ -123,7 +127,7 @@ export default function HomePage() {
             <a href="#events" className="btn btn-secondary">
               See Event Highlights
             </a>
-            <Link href="/admin/dashboard" className="btn btn-secondary">
+            <Link href="/dashboard" className="btn btn-secondary">
               Launch Admin Console
             </Link>
           </div>
@@ -164,7 +168,7 @@ export default function HomePage() {
               <span>{feature.label}</span>
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
-              <Link href="/admin/dashboard" className="btn btn-secondary" style={{ width: 'fit-content' }}>
+              <Link href="/dashboard" className="btn btn-secondary" style={{ width: 'fit-content' }}>
                 Build a bracket
               </Link>
             </article>
@@ -207,7 +211,7 @@ export default function HomePage() {
               <span style={{ color: 'var(--accent-primary)', fontSize: 14, letterSpacing: '0.08em' }}>
                 {matchup.date}
               </span>
-              <Link href="/admin/dashboard" className="btn btn-secondary" style={{ width: 'fit-content' }}>
+              <Link href="/dashboard" className="btn btn-secondary" style={{ width: 'fit-content' }}>
                 Manage matchup
               </Link>
             </div>
@@ -225,7 +229,7 @@ export default function HomePage() {
           <a href="mailto:founders@pinkings.app" className="btn btn-primary">
             Request an invite
           </a>
-          <Link href="/admin/dashboard" className="btn btn-secondary">
+          <Link href="/dashboard" className="btn btn-secondary">
             Preview the console
           </Link>
         </div>
@@ -234,8 +238,8 @@ export default function HomePage() {
       <footer className="site-footer">
         <span>© {new Date().getFullYear()} PinKings. Built for community hype squads.</span>
         <div className="footer-links">
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/terms">Terms</Link>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
           <a href="mailto:team@pinkings.app">Contact</a>
         </div>
       </footer>

@@ -9,10 +9,15 @@
       ],
       "@pin-kings/ui": [
         "../../packages/ui/src"
+      ],
+      "@/*": [
+        "./*"
       ]
     },
     "types": [
-      "node"
+      "node",
+      "react",
+      "react-dom"
     ],
     "module": "ESNext",
     "allowJs": true,
