@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VerificationLevel {
+  NONE
+  BASIC
+  GOVERNMENT
+}
+
+enum Role {
+  MEMBER
+  LEADER
+  ADMIN
+}
+
+enum CommunityStatus {
+  ACTIVE
+  PAUSED
+}
+
+enum LeaderLevel {
+  LOCAL
+  REGIONAL
+  GLOBAL
+}
+
+enum LeaderStatus {
+  PENDING
+  VERIFIED
+  SUSPENDED
+}
+
+enum BadgeTier {
+  NONE
+  BRONZE
+  SILVER
+  GOLD
+  CROWN
+}
+
+enum EventVisibility {
+  PUBLIC
+  INVITE_ONLY
+}
+
+enum RSVPStatus {
+  GOING
+  WAITLIST
+  CANCELED
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  CLOSED
+}
+
+model User {
+  id              String              @id @default(cuid())
+  email           String              @unique
+  phone           String?             @unique
+  name            String
+  avatarUrl       String?
+  homePin         String?
+  verificationLvl VerificationLevel    @default(NONE)
+  roles           Role[]
+  leaderProfile   LeaderProfile?
+  communities     Community[]         @relation("CommunityCreator")
+  eventsCreated   Event[]             @relation("EventCreator")
+  rsvps           RSVP[]
+  attendances     Attendance[]
+  pointTxns       PointTxn[]
+  reports         Report[]            @relation("Reporter")
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model InterestCategory {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  communities Community[]
+}
+
+model PinArea {
+  id          String       @id @default(cuid())
+  pinCode     String
+  city        String
+  lat         Float
+  lon         Float
+  geoHash     String?
+  communities Community[]
+
+  @@index([pinCode])
+}
+
+model Community {
+  id          String            @id @default(cuid())
+  interestId  String
+  pinAreaId   String
+  title       String
+  description String?
+  createdById String
+  status      CommunityStatus   @default(ACTIVE)
+  createdAt   DateTime          @default(now())
+  interest    InterestCategory  @relation(fields: [interestId], references: [id])
+  pinArea     PinArea           @relation(fields: [pinAreaId], references: [id])
+  createdBy   User              @relation("CommunityCreator", fields: [createdById], references: [id])
+  leaderProfiles LeaderProfile[]
+  events      Event[]
+}
+
+model LeaderProfile {
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  communityId String
+  level       LeaderLevel  @default(LOCAL)
+  points      Int          @default(0)
+  badgeTier   BadgeTier    @default(NONE)
+  status      LeaderStatus @default(PENDING)
+  bio         String?
+  user        User         @relation(fields: [userId], references: [id])
+  community   Community    @relation(fields: [communityId], references: [id])
+  events      Event[]
+}
+
+model Event {
+  id           String          @id @default(cuid())
+  communityId  String
+  createdById  String
+  title        String
+  description  String?
+  startAt      DateTime
+  endAt        DateTime
+  lat          Float
+  lon          Float
+  venueName    String?
+  maxAttendees Int?
+  visibility   EventVisibility @default(PUBLIC)
+  createdAt    DateTime        @default(now())
+  community    Community       @relation(fields: [communityId], references: [id])
+  createdBy    User            @relation("EventCreator", fields: [createdById], references: [id])
+  rsvps        RSVP[]
+  attendances  Attendance[]
+  checkinTokens CheckinToken[]
+  pointTxns    PointTxn[]
+
+  @@index([communityId])
+  @@index([startAt])
+}
+
+model RSVP {
+  id        String     @id @default(cuid())
+  eventId   String
+  userId    String
+  status    RSVPStatus @default(GOING)
+  createdAt DateTime   @default(now())
+  event     Event      @relation(fields: [eventId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+}
+
+model Attendance {
+  id              String   @id @default(cuid())
+  eventId         String
+  userId          String
+  checkedInAt     DateTime?
+  hostConfirmedAt DateTime?
+  rating          Int?
+  feedback        String?
+  verified        Boolean  @default(false)
+  event           Event    @relation(fields: [eventId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+}
+
+model CheckinToken {
+  id        String   @id @default(cuid())
+  eventId   String
+  code      String
+  expiresAt DateTime
+  nonce     String
+  event     Event    @relation(fields: [eventId], references: [id])
+
+  @@index([eventId, expiresAt])
+}
+
+model PointTxn {
+  id          String   @id @default(cuid())
+  userId      String
+  communityId String
+  eventId     String?
+  delta       Int
+  reason      String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id])
+  event       Event?    @relation(fields: [eventId], references: [id])
+
+  @@index([userId])
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reporterId String
+  targetType String
+  targetId   String
+  reason     String
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+  reporter   User         @relation("Reporter", fields: [reporterId], references: [id])
+}
