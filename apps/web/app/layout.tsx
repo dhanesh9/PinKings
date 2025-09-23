@@ -5,15 +5,12 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'PIN-Kings Admin',
-  description: 'Admin portal for hyperlocal leaders and events.',
+  title: 'PinKings | Hyperlocal Competitions for Real-World Leaders',
+  description:
+    'Discover and champion local leaders through weekly pinboard challenges, event highlights, and community matchups.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>{children}</body>
