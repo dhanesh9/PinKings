@@ -395,9 +395,476 @@ export default function ExplorePage() {
             Viewing <strong style={{ color: 'var(--text-strong)' }}>{activeCategoryLabel}</strong>{' '}
             in <strong style={{ color: 'var(--text-strong)' }}>{activeLocationLabel}</strong>
           </div>
+ codex/review-new-typescript-changes-for-front-end-0sq425
+
         </div>
       </section>
 
+      <section
+        style={{
+          display: 'grid',
+          gap: 24,
+          gridTemplateColumns: 'minmax(0, 2.5fr) minmax(0, 1fr)',
+        }}
+      >
+        <div style={{ display: 'grid', gap: 20 }}>
+          <header style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              <h2 style={{ margin: '0 0 4px', fontSize: 24 }}>Upcoming events</h2>
+              <p style={{ margin: 0, color: 'var(--text-soft)' }}>
+                Choose a session to reveal the organizers and pricing for that area.
+              </p>
+            </div>
+            <span style={{ alignSelf: 'flex-start', fontSize: 13, opacity: 0.7 }}>
+              {filteredEvents.length} events
+            </span>
+          </header>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: 18,
+            }}
+          >
+            {filteredEvents.map((event) => {
+              const eventCategory = categoryMap.get(event.categoryId);
+              const eventLocation = locationMap.get(event.locationId);
+              const community = communityMap.get(event.communitySlug);
+              const hosts = event.hostIds
+                .map((id) => leaderMap.get(id)?.name)
+                .filter(Boolean)
+                .join(', ');
+              const fill = percentFilled(event);
+
+              return (
+                <article key={event.id} style={{ ...cardStyle, gap: 16 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 16,
+                    }}
+                  >
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      <span style={{ fontSize: 13, opacity: 0.7 }}>
+                        {event.when} • {event.timeslot}
+                      </span>
+                      <h3 style={{ margin: 0 }}>{event.title}</h3>
+                      <p style={{ margin: 0, color: 'var(--text-soft)' }}>{event.summary}</p>
+                    </div>
+                    <span style={{ ...pillStyle, border: 'none', background: 'rgba(56,189,248,0.16)' }}>
+                      {eventCategory?.label ?? 'Community event'}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 16,
+                      fontSize: 14,
+                      color: 'var(--text-soft)',
+                    }}
+                  >
+                    <span>
+                      {eventLocation?.label ?? 'Location coming soon'} • {event.venue}
+                    </span>
+                    <span>Format: {event.format}</span>
+                    <span>Level: {event.skillLevel}</span>
+                    <span>Price: {formatPriceRange(event.price)}</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <div
+                      style={{
+                        height: 6,
+                        borderRadius: 999,
+                        background: 'rgba(148,163,184,0.22)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${fill}%`,
+                          background: 'linear-gradient(90deg, #38bdf8, #f472b6)',
+                          height: '100%',
+                        }}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: 13,
+                        color: 'var(--text-soft)',
+                      }}
+                    >
+                      <span>
+                        {event.seats.booked}/{event.seats.total} spots booked ({fill}% full)
+                      </span>
+                      <span>Organizers: {hosts || 'TBA'}</span>
+                    </div>
+                  </div>
+
+                  <footer
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: 12,
+                    }}
+                  >
+                    <Link
+                      href={`/explore/community/${event.communitySlug}`}
+                      style={{ ...pillStyle, borderColor: 'rgba(148,163,184,0.4)' }}
+                    >
+                      Visit {community?.name ?? 'community hub'}
+                    </Link>
+                    <span style={{ fontSize: 13, color: 'var(--text-soft)' }}>
+                      Hosts compete for top contributor badges here.
+                    </span>
+                  </footer>
+                </article>
+              );
+            })}
+            {filteredEvents.length === 0 && (
+              <article style={cardStyle}>
+                <h3 style={{ margin: '0 0 8px' }}>No events match yet</h3>
+                <p style={{ margin: 0, color: 'var(--text-soft)' }}>
+                  Try broadening your filters or clear the search to see all
+                  categories and neighborhoods.
+                </p>
+              </article>
+            )}
+          </div>
+ main
+        </div>
+
+        <aside style={{ display: 'grid', gap: 24 }}>
+          <section style={{ ...cardStyle, gap: 16 }}>
+            <header style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 13, opacity: 0.75 }}>Top contributors</span>
+              <h2 style={{ margin: 0, fontSize: 20 }}>Leaders in {activeLocationLabel}</h2>
+              <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: 14 }}>
+                Filtered by {activeCategoryLabel.toLowerCase()}. Compare price
+                ranges and pick the coach that matches your vibe.
+              </p>
+            </header>
+            <div style={{ display: 'grid', gap: 12 }}>
+              {contributorShortlist.map((leader) => (
+                <article
+                  key={leader.id}
+                  style={{
+                    border: '1px solid rgba(148,163,184,0.18)',
+                    borderRadius: 16,
+                    padding: 16,
+                    background: 'rgba(15,23,42,0.65)',
+                    display: 'grid',
+                    gap: 6,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <strong>{leader.name}</strong>
+                    <span style={{ fontSize: 13, opacity: 0.75 }}>{leader.score} pts</span>
+                  </div>
+                  <span style={{ fontSize: 13, color: 'var(--text-soft)' }}>
+                    {leader.badges.join(' • ')}
+                  </span>
+                  <span style={{ fontSize: 13 }}>
+                    Rate: {formatPriceRange(leader.price)} • Rating {leader.rating.toFixed(2)} ★
+                  </span>
+                  <span style={{ fontSize: 13, color: 'var(--text-soft)' }}>
+                    {leader.expertise[0]}
+                  </span>
+                </article>
+              ))}
+              {contributorShortlist.length === 0 && (
+                <p style={{ color: 'var(--text-soft)', fontSize: 14 }}>
+                  No contributors in view yet—invite instructors to claim this
+                  lane.
+                </p>
+              )}
+            </div>
+          </section>
+
+ codex/review-new-typescript-changes-for-front-end-zyidlq
+          <section id="create" style={{ ...cardStyle, gap: 16 }}>
+          <section style={{ ...cardStyle, gap: 16 }}>
+ main
+            <header style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 13, opacity: 0.75 }}>Create an event</span>
+              <h2 style={{ margin: 0, fontSize: 20 }}>Draft your session</h2>
+              <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: 14 }}>
+                Fill out the essentials and share the preview with your
+                co-hosts. Everything stays client-side.
+              </p>
+            </header>
+            <form
+              onSubmit={handleCreateEvent}
+              style={{ display: 'grid', gap: 12 }}
+            >
+              <label style={{ display: 'grid', gap: 6 }}>
+                <span>Title</span>
+                <input
+                  value={formState.title}
+                  onChange={handleFormFieldChange('title')}
+                  placeholder="Sunset mobility mashup"
+                  required
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(148,163,184,0.28)',
+                    background: 'rgba(15,23,42,0.65)',
+                    color: 'inherit',
+                  }}
+                />
+              </label>
+              <label style={{ display: 'grid', gap: 6 }}>
+                <span>Summary</span>
+                <textarea
+                  value={formState.summary}
+                  onChange={handleFormFieldChange('summary')}
+                  rows={3}
+                  placeholder="What makes this session hype?"
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(148,163,184,0.28)',
+                    background: 'rgba(15,23,42,0.65)',
+                    color: 'inherit',
+                    resize: 'vertical',
+                  }}
+                />
+              </label>
+              <label style={{ display: 'grid', gap: 6 }}>
+                <span>Category</span>
+                <select
+                  value={formState.categoryId}
+                  onChange={handleFormFieldChange('categoryId')}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(148,163,184,0.28)',
+                    background: 'rgba(15,23,42,0.65)',
+                    color: 'inherit',
+                  }}
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: 'grid', gap: 6 }}>
+                <span>Location</span>
+                <select
+                  value={formState.locationId}
+                  onChange={handleFormFieldChange('locationId')}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(148,163,184,0.28)',
+                    background: 'rgba(15,23,42,0.65)',
+                    color: 'inherit',
+                  }}
+                >
+                  {locations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                <label style={{ display: 'grid', gap: 6 }}>
+                  <span>Date</span>
+                  <input
+                    type="date"
+                    value={formState.date}
+                    onChange={handleFormFieldChange('date')}
+                    required
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(148,163,184,0.28)',
+                      background: 'rgba(15,23,42,0.65)',
+                      color: 'inherit',
+                    }}
+                  />
+                </label>
+                <label style={{ display: 'grid', gap: 6 }}>
+                  <span>Start time</span>
+                  <input
+                    type="time"
+                    value={formState.start}
+                    onChange={handleFormFieldChange('start')}
+                    required
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(148,163,184,0.28)',
+                      background: 'rgba(15,23,42,0.65)',
+                      color: 'inherit',
+                    }}
+                  />
+                </label>
+              </div>
+              <label style={{ display: 'grid', gap: 6 }}>
+                <span>Duration (minutes)</span>
+                <input
+                  type="number"
+                  min={15}
+                  value={formState.duration}
+                  onChange={handleFormFieldChange('duration')}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(148,163,184,0.28)',
+                    background: 'rgba(15,23,42,0.65)',
+                    color: 'inherit',
+                  }}
+                />
+              </label>
+              <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                <label style={{ display: 'grid', gap: 6 }}>
+                  <span>Min price (USD)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={formState.priceMin}
+                    onChange={handleFormFieldChange('priceMin')}
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(148,163,184,0.28)',
+                      background: 'rgba(15,23,42,0.65)',
+                      color: 'inherit',
+                    }}
+                  />
+                </label>
+                <label style={{ display: 'grid', gap: 6 }}>
+                  <span>Max price (USD)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={formState.priceMax}
+                    onChange={handleFormFieldChange('priceMax')}
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(148,163,184,0.28)',
+                      background: 'rgba(15,23,42,0.65)',
+                      color: 'inherit',
+                    }}
+                  />
+                </label>
+              </div>
+              <label style={{ display: 'grid', gap: 6 }}>
+                <span>Venue</span>
+                <input
+                  value={formState.venue}
+                  onChange={handleFormFieldChange('venue')}
+                  placeholder="Neighborhood gym, studio, or park"
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(148,163,184,0.28)',
+                    background: 'rgba(15,23,42,0.65)',
+                    color: 'inherit',
+                  }}
+                />
+              </label>
+              <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                <label style={{ display: 'grid', gap: 6 }}>
+                  <span>Format</span>
+                  <select
+                    value={formState.format}
+                    onChange={handleFormFieldChange('format')}
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(148,163,184,0.28)',
+                      background: 'rgba(15,23,42,0.65)',
+                      color: 'inherit',
+                    }}
+                  >
+                    <option value="In person">In person</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Virtual">Virtual</option>
+                  </select>
+                </label>
+                <label style={{ display: 'grid', gap: 6 }}>
+                  <span>Skill level</span>
+                  <select
+                    value={formState.skillLevel}
+                    onChange={handleFormFieldChange('skillLevel')}
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(148,163,184,0.28)',
+                      background: 'rgba(15,23,42,0.65)',
+                      color: 'inherit',
+                    }}
+                  >
+                    <option value="All levels">All levels</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </label>
+              </div>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%', marginTop: 4 }}
+              >
+                Generate draft preview
+              </button>
+            </form>
+            {formMessage && (
+              <p style={{ fontSize: 13, color: 'var(--text-soft)', margin: 0 }}>
+                {formMessage}
+              </p>
+            )}
+            {draftPreview && (
+              <article
+                style={{
+                  border: '1px dashed rgba(148,163,184,0.4)',
+                  borderRadius: 16,
+                  padding: 16,
+                  display: 'grid',
+                  gap: 8,
+                  background: 'rgba(15,23,42,0.4)',
+                }}
+              >
+                <span style={{ fontSize: 12, opacity: 0.7 }}>Draft preview</span>
+                <strong>{draftPreview.title}</strong>
+                <span style={{ fontSize: 13, color: 'var(--text-soft)' }}>
+                  {draftPreview.summary}
+                </span>
+                <span style={{ fontSize: 13 }}>
+                  {draftPreview.schedule}
+                  {draftPreview.duration ? ` • ${draftPreview.duration}` : ''}
+                </span>
+                <span style={{ fontSize: 13 }}>
+                  {draftPreview.locationLabel}
+                  {formState.venue ? ` • ${formState.venue}` : ''}
+                </span>
+                <span style={{ fontSize: 13 }}>
+                  {draftPreview.categoryLabel} • {draftPreview.format} •{' '}
+                  {draftPreview.skillLevel}
+                </span>
+                <span style={{ fontSize: 13 }}>Price: {draftPreview.priceLabel}</span>
+              </article>
+            )}
+          </section>
+        </aside>
+      </section>
+
+ codex/review-new-typescript-changes-for-front-end-0sq425
       <section
         style={{
           display: 'grid',
@@ -859,6 +1326,13 @@ export default function ExplorePage() {
       </section>
 
       <section id="communities" style={{ display: 'grid', gap: 16 }}>
+
+codex/review-new-typescript-changes-for-front-end-zyidlq
+      <section id="communities" style={{ display: 'grid', gap: 16 }}>
+
+      <section style={{ display: 'grid', gap: 16 }}>
+ main
+ main
         <header style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ margin: '0 0 4px', fontSize: 24 }}>Communities to collaborate with</h2>
