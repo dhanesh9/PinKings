@@ -1,4 +1,8 @@
+ codex/review-new-typescript-changes-for-front-end-zyidlq
 type PillChild = JSX.Element | string | number | boolean | null | undefined;
+=======
+import type { PropsWithChildren } from 'react';
+main
 
 export type PillProps = { color?: string; children?: PillChild | PillChild[] };
 

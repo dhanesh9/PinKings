@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+codex/review-new-typescript-changes-for-front-end-zyidlq
 import {
   categories,
   events,
@@ -15,6 +16,20 @@ import {
 } from '@/lib/mock';
 
 const currencySymbols: Record<PriceRange['currency'], string> = { USD: '$' };
+=======
+import type { Route } from 'next';
+type NavLink =
+  | { label: string; href: Route; kind?: 'route' }
+  | { label: string; href: `#${string}`; kind: 'anchor' };
+
+const navLinks: NavLink[] = [
+  { label: 'Home', href: '/', kind: 'route' },
+  { label: 'Leaders', href: '#leaders', kind: 'anchor' },
+  { label: 'Events', href: '#events', kind: 'anchor' },
+  { label: 'Matchups', href: '#matchups', kind: 'anchor' },
+  { label: 'Admin', href: '/dashboard', kind: 'route' },
+];
+main
 
 function formatPrice(price: PriceRange) {
   const symbol = currencySymbols[price.currency] ?? '';
@@ -62,6 +77,7 @@ const navLinks = [
 ];
 
 export default function HomePage() {
+ codex/review-new-typescript-changes-for-front-end-zyidlq
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLocation, setSelectedLocation] = useState<string>(defaultLocationId);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -120,6 +136,77 @@ export default function HomePage() {
           <span>PinKings Meetups</span>
         </Link>
         <nav className="home-nav" aria-label="Primary">
+=======
+  return (
+    <main className="page">
+      <header className="site-header" aria-label="Primary navigation">
+        <Link href="/" className="brand" aria-label="PinKings home">
+          <span className="brand-badge">PK</span>
+          PinKings
+        </Link>
+        <nav>
+          <ul className="nav-links">
+            {navLinks.map((link) => {
+              const isAnchor = link.kind === 'anchor';
+              const isActive = !isAnchor && link.href === '/';
+              const linkClass = isActive ? 'nav-link-active' : undefined;
+
+              return (
+                <li key={link.label}>
+                  {isAnchor ? (
+                    <a href={link.href} className={linkClass}>
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link href={link.href} className={linkClass}>
+                      {link.label}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div className="header-actions">
+          <a href="/login" className="btn btn-secondary">
+            Sign In
+          </a>
+          <a href="#waitlist" className="btn btn-primary">
+            Join the Waitlist
+          </a>
+        </div>
+      </header>
+
+      <section className="hero">
+        <div>
+          <span className="hero-badge">Pin your local legends</span>
+          <h1 className="hero-title">
+            Rise to the board. <span>Win the block.</span>
+          </h1>
+          <p className="hero-description">
+            PinKings turns hyperlocal leadership into a season of friendly rivalry.
+            Track appearances, rally support, and surface the changemakers driving your
+            neighborhood forward.
+          </p>
+          <div className="hero-actions">
+            <a href="#leaders" className="btn btn-primary">
+              Explore Leaders
+            </a>
+            <a href="#events" className="btn btn-secondary">
+              See Event Highlights
+            </a>
+            <Link href="/dashboard" className="btn btn-secondary">
+              Launch Admin Console
+            </Link>
+          </div>
+        </div>
+        <aside className="hero-visual" aria-label="Leaderboard preview">
+          <h3>
+            Live Leaderboard
+            <span style={{ fontSize: 14, opacity: 0.7 }}>•</span>
+            <span style={{ color: 'var(--accent-highlight)', fontSize: 14 }}>Beta</span>
+          </h3>
+main
           <ul>
             {navLinks.map((link) => (
               <li key={link.label}>
@@ -143,6 +230,7 @@ export default function HomePage() {
             event type to see what's happening nearby.
           </p>
         </div>
+codex/review-new-typescript-changes-for-front-end-zyidlq
         <form className="search-form" role="search" onSubmit={(event) => event.preventDefault()}>
           <label className="search-field">
             <span>Search by event or host</span>
@@ -194,6 +282,20 @@ export default function HomePage() {
             </fieldset>
           </div>
         </form>
+=======
+        <div className="feature-grid">
+          {featureHighlights.map((feature) => (
+            <article key={feature.title} className="feature-card">
+              <span>{feature.label}</span>
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+              <Link href="/dashboard" className="btn btn-secondary" style={{ width: 'fit-content' }}>
+                Build a bracket
+              </Link>
+            </article>
+          ))}
+        </div>
+ main
       </section>
 
       <section className="home-layout">
@@ -261,6 +363,7 @@ export default function HomePage() {
             )}
           </div>
         </div>
+codex/review-new-typescript-changes-for-front-end-zyidlq
 
         <aside className="leaderboard-column" aria-labelledby="leaders-heading">
           <header>
@@ -286,9 +389,23 @@ export default function HomePage() {
             <div className="empty-state">
               <h3>Pick a category to see leaders</h3>
               <p>Set your filters to discover instructors who host that style of event.</p>
+=======
+        <div className="matches-grid">
+          {upcomingMatchups.map((matchup) => (
+            <div key={matchup.title} className="match-card">
+              <h4>{matchup.title}</h4>
+              <p>{matchup.description}</p>
+              <span style={{ color: 'var(--accent-primary)', fontSize: 14, letterSpacing: '0.08em' }}>
+                {matchup.date}
+              </span>
+              <Link href="/dashboard" className="btn btn-secondary" style={{ width: 'fit-content' }}>
+                Manage matchup
+              </Link>
+ main
             </div>
           )}
 
+codex/review-new-typescript-changes-for-front-end-zyidlq
           {sortedLeaders.length > 1 && (
             <ol className="leader-list">
               {sortedLeaders.slice(1, 5).map((leader, index) => (
@@ -317,6 +434,30 @@ export default function HomePage() {
             Launch a meetup, workshop, or training session in minutes. Share details, manage RSVPs,
             and spotlight your instructors.
           </p>
+=======
+      <section id="waitlist" className="cta-panel">
+        <h3>Ready to crown your next neighborhood MVP?</h3>
+        <p>
+          Join the PinKings beta crew for early access, curated onboarding, and launch-night perks
+          for your community.
+        </p>
+        <div className="hero-actions" style={{ justifyContent: 'center' }}>
+          <a href="mailto:founders@pinkings.app" className="btn btn-primary">
+            Request an invite
+          </a>
+          <Link href="/dashboard" className="btn btn-secondary">
+            Preview the console
+          </Link>
+        </div>
+      </section>
+
+      <footer className="site-footer">
+        <span>© {new Date().getFullYear()} PinKings. Built for community hype squads.</span>
+        <div className="footer-links">
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="mailto:team@pinkings.app">Contact</a>
+ main
         </div>
         <Link href="/explore#create" className="btn btn-primary">
           Create an event
