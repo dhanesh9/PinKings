@@ -586,7 +586,7 @@ export default function ExplorePage() {
             </div>
           </section>
 
-          <section style={{ ...cardStyle, gap: 16 }}>
+          <section id="create" style={{ ...cardStyle, gap: 16 }}>
             <header style={{ display: 'grid', gap: 4 }}>
               <span style={{ fontSize: 13, opacity: 0.75 }}>Create an event</span>
               <h2 style={{ margin: 0, fontSize: 20 }}>Draft your session</h2>
@@ -858,7 +858,7 @@ export default function ExplorePage() {
         </aside>
       </section>
 
-      <section style={{ display: 'grid', gap: 16 }}>
+      <section id="communities" style={{ display: 'grid', gap: 16 }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ margin: '0 0 4px', fontSize: 24 }}>Communities to collaborate with</h2>
